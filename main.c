@@ -1,9 +1,18 @@
 #include <stdio.h>
+#include <string.h>
 #include <stdlib.h>
 #include <sys/mman.h>
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
+
+#define RED     "\x1b[31m"
+#define GREEN   "\x1b[32m"
+#define YELLOW  "\x1b[33m"
+#define BLUE    "\x1b[34m"
+#define MAGENTA "\x1b[35m"
+#define CYAN    "\x1b[36m"
+#define RESET   "\x1b[0m"
 
 #define FILAS "ABCDE"
 
@@ -14,7 +23,7 @@ typedef struct grid{
 	int barcos; //barcos vivos
 } Grid;
 
-
+/* Funciones */
 void tablero(){
 	/* Declaraciones*/
 	int c,f;
@@ -34,12 +43,19 @@ void tablero(){
 	}
 }	
 
-int existe(int j, char c){
+void instrucciones(int j){
+	printf(RED	"Bienvenido Capitan %d\n", j);
+	printf(YELLOW	"Las coordenadas del juegp se componen de una Fila (letra mayuscula) seguida de una Columna (numero), ej B1\n");
+	printf("Columnas: 1 - 2 - 3 - 4 - 5\n");
+	printf("Filas: A - B - C - D - E\n");
+	printf("TIP: No ingrese coordenadas fuera de rango o el programa presentara problemas de ejecucion.\n"	RESET);
+}
+
+int existe(int j, char coord1, char coord2){
 	struct stat st = {0};
-	char barco = 'barco';
-	char ruta[25];
+	char ruta[19];
 	if (j == 1){
-		snprintf(ruta, sizeof(ruta), "./J1/%c/%c", c, barco);
+		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", coord1, coord2);
 		if (stat(ruta, &st) == -1){
     		return 0;
 		}
@@ -48,7 +64,7 @@ int existe(int j, char c){
 		}
 	}
 	else if (j == 2){
-		snprintf(ruta, sizeof(ruta), "./J2/%c/%c", c, barco);
+		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", coord1, coord2);
 		if (stat(ruta, &st) == -1){
     		return 0;
 		}
@@ -62,25 +78,28 @@ int existe(int j, char c){
 	
 }
 
-void crearbarco(int j, char c){
-	char ruta[25];
+void crearbarco(int j, char coord1, char coord2){
+	char ruta[19];
 	if (j == 1){
-		snprintf(ruta, sizeof(ruta), "./J1/%c/barco.txt", c);
+		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", coord1, coord2);
 		FILE *fp;
 		fp=fopen(ruta,"w");
 		fclose(fp);
 	}
 	else if (j == 2){
-		snprintf(ruta, sizeof(ruta), "./J2/%c/barco.txt", c);
+		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", coord1, coord2);
 		FILE *fp;
 		fp=fopen(ruta,"w");
 		fclose(fp);
 	}
 }
 
+
+
 int main()
 {
 	tablero();
+
 	/*Inicializamos los grid de cada jugador con memoria dinamica*/
 	Grid * grid1 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	Grid * grid2 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
@@ -93,21 +112,20 @@ int main()
 	int msg =1;
 	int capitan;
 
+	/* Creacion de barcos de cada jugador */
+
+	/* Jugador 1 */
 	if(pid>0){
 		capitan = 1;
-		printf("Bienvenido Capitan 1\n");
-		printf("Las coordenadas del juegp se componen de una Fila (letra mayuscula) seguida de una Columna (numero), ej B1\n");
-		printf("Columnas: 1 - 2 - 3 - 4 - 5\n");
-		printf("Filas: A - B - C - D - E\n");
-		printf("TIP: No ingrese coordenadas fuera de rango o el programa presentara problemas de ejecucion.\n");
+		instrucciones(capitan);
 		int i = 5;
 		while (i != 0){
-			char coord[70];
+			char coord[4];
 			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", coord);
-			if (existe(capitan, coord)==0){
-				crearbarco(capitan, coord);
-				i -=1;
+			scanf("%s", &coord);
+			if (existe(capitan, coord[0], coord[1])==0){
+				crearbarco(capitan, coord[0], coord[1]);
+				i -= 1;
 			}
 			else{
 				printf("Error: En esa coordenada ya existe un barco.\n");
@@ -116,22 +134,21 @@ int main()
 		close(pipe1[1]);
 		read(pipe1[0], msg, sizeof(msg));
 	}
+	/* Jugador 2 */
 	else{
 		capitan = 2;
 		close(pipe1[0]);
 		write(pipe1[1], msg, sizeof(msg));
-		printf("Bienvenido Capitan 2\n");
-		printf("Las coordenadas del juegp se componen de una Fila (letra mayuscula) seguida de una Columna (numero), ej B1\n");
-		printf("Columnas: 1 - 2 - 3 - 4 - 5\n");
-		printf("Filas: A - B - C - D - E\n");
-		printf("TIP: No ingrese coordenadas fuera de rango o el programa presentara problemas de ejecucion.\n");
+		close(pipe2[1]);
+		read(pipe2[0], msg, sizeof(msg));
+		instrucciones(capitan);
 		int i = 5;
 		while (i != 0){
-			char coord[70];
+			char coord[4];
 			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", coord);
-			if (existe(capitan,coord)==0){
-				crearbarco(capitan, coord);
+			scanf("%s", &coord);
+			if (existe(capitan,coord[0],coord[1])==0){
+				crearbarco(capitan, coord[0], coord[1]);
 				i -=1;
 			}
 			else{
@@ -141,7 +158,6 @@ int main()
 	}
 
 	
-
 
 
 
