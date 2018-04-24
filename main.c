@@ -19,8 +19,10 @@
 
 /*Estructuras*/
 typedef struct grid{
-	char zona[5][5]; 
-	int barcos; //barcos vivos
+	char zona[5][5]; //ataques que me hacen
+	int barcos; //barcos vivos mios
+	int naves; //barcos vivos enemigo
+	char mapa[5][5]; //ataque que yo hago 
 } Grid;
 
 /* Funciones */
@@ -53,10 +55,10 @@ void instrucciones(int j){
 
 int existe(int j, char coord1, char coord2){
 	struct stat st = {0};
-	char ruta[19];
 	if (j == 1){
-		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", coord1, coord2);
-		if (stat(ruta, &st) == -1){
+		char ruta1[19];
+		snprintf(ruta1, sizeof(ruta1), "./J1/%c%c/barco.txt", coord1, coord2);
+		if (stat(ruta1, &st) == -1){
     		return 0;
 		}
 		else{
@@ -64,32 +66,30 @@ int existe(int j, char coord1, char coord2){
 		}
 	}
 	else if (j == 2){
-		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", coord1, coord2);
-		if (stat(ruta, &st) == -1){
+		char ruta2[19];
+		snprintf(ruta2, sizeof(ruta2), "./J2/%c%c/barco.txt", coord1, coord2);
+		if (stat(ruta2, &st) == -1){
     		return 0;
 		}
 		else{
 			return 1;
 		}
 	}
-	else{
-		return -1; // Error jugador no existe
-	}
-	
 }
 
 void crearbarco(int j, char coord1, char coord2){
-	char ruta[19];
 	if (j == 1){
-		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", coord1, coord2);
+		char ruta1[19];
+		snprintf(ruta1, sizeof(ruta1), "./J1/%c%c/barco.txt", coord1, coord2);
 		FILE *fp;
-		fp=fopen(ruta,"w");
+		fp=fopen(ruta1,"w");
 		fclose(fp);
 	}
 	else if (j == 2){
-		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", coord1, coord2);
+		char ruta2[19];
+		snprintf(ruta2, sizeof(ruta2), "./J2/%c%c/barco.txt", coord1, coord2);
 		FILE *fp;
-		fp=fopen(ruta,"w");
+		fp=fopen(ruta2,"w");
 		fclose(fp);
 	}
 }
@@ -104,57 +104,62 @@ int main()
 	Grid * grid1 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	Grid * grid2 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 
-	int pid;
-	pid = fork();
-	int pipe1[2], pipe2[2];
-	pipe(pipe1);
-	pipe(pipe2);
-	int msg =1;
-	int capitan;
+	int pid, pipePaH[2], pipeHaP[2]; 
+	pipe(pipePaH); 
+	pipe(pipeHaP);
+	char msg[1];
+
+	if((pid = fork() ) == 0){ 
+    close(pipePaH[1]);
+    close(pipeHaP[0]);
+    write(pipeHaP[1] ,"0", 1);
+	}
+	else{
+    close(pipeHaP[1]); 
+    close(pipePaH[0]);
+	}
 
 	/* Creacion de barcos de cada jugador */
 
 	/* Jugador 1 */
 	if(pid>0){
-		capitan = 1;
-		instrucciones(capitan);
+		read(pipeHaP[0],msg,1);
+		instrucciones(1);
 		int i = 5;
-		while (i != 0){
-			char coord[4];
+		while (i > 0){
+			char coord1[4];
 			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", &coord);
-			if (existe(capitan, coord[0], coord[1])==0){
-				crearbarco(capitan, coord[0], coord[1]);
-				i -= 1;
+			scanf("%s", &coord1);
+			if (existe(1, coord1[0], coord1[1]) == 0){
+				crearbarco(1, coord1[0], coord1[1]);
+				i = i - 1;
 			}
 			else{
 				printf("Error: En esa coordenada ya existe un barco.\n");
 			}
 		}
-		close(pipe1[1]);
-		read(pipe1[0], msg, sizeof(msg));
+		write(pipePaH[1],"1",1);
 	}
+
+
 	/* Jugador 2 */
 	else{
-		capitan = 2;
-		close(pipe1[0]);
-		write(pipe1[1], msg, sizeof(msg));
-		close(pipe2[1]);
-		read(pipe2[0], msg, sizeof(msg));
-		instrucciones(capitan);
-		int i = 5;
-		while (i != 0){
-			char coord[4];
+		read(pipePaH[0],msg,1);
+		instrucciones(2);
+		int t = 5;
+		while (t > 0){
+			char coord2[4];
 			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", &coord);
-			if (existe(capitan,coord[0],coord[1])==0){
-				crearbarco(capitan, coord[0], coord[1]);
-				i -=1;
+			scanf("%s", &coord2);
+			if (existe(2,coord2[0],coord2[1])==0){
+				crearbarco(2, coord2[0], coord2[1]);
+				t = t-1;
 			}
 			else{
 				printf("Error: En esa coordenada ya existe un barco.\n");
 			}
 		}
+		write(pipeHaP[1],"0",1);
 	}
 
 	
