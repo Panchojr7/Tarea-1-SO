@@ -131,7 +131,7 @@ void crearhundido(int j, char coord1, char coord2){
 void panel(int w, int arr[5][5]){
 	int i,j;
 	if (w==1){
-		printf(GREEN	"|				Panel de Combate				|\n");
+		printf(GREEN	"|				Panel de Combate Jugador 1			|\n");
 		for (i = 0; i < 5; ++i){
 			printf("|	%d	|	%d	|	%d	|	%d	|	%d	|\n", arr[i][0], arr[i][1], arr[i][2], arr[i][3], arr[i][4]);
 				
@@ -139,7 +139,7 @@ void panel(int w, int arr[5][5]){
 		printf("\n"	RESET);
 	}
 	else if (w==2){
-		printf(CYAN	"|				Panel de Combate				|\n");
+		printf(CYAN	"|				Panel de Combate Jugador 2			|\n");
 		for (i = 0; i < 5; ++i){
 			printf("|	%d	|	%d	|	%d	|	%d	|	%d	|\n", arr[i][0], arr[i][1], arr[i][2], arr[i][3], arr[i][4]);
 		}
@@ -251,6 +251,7 @@ int main()
 	/**********************************************************************************************************************************************/
 
 	char ata[2];
+	char que[2];
 	while(*fin > 0){
 
 		/* Jugador 1 */
@@ -258,9 +259,11 @@ int main()
 		    read(pipeHaP[0],turno,1);
 		    if(turno[0]=='0' && *fin > 0){
 		    	panel(1,grid1->mapa);
-		        printf("Jugador 1, escriba la coordenada donde desea realizar su ataque:");
+		        printf("Jugador 1, escriba la coordenada del primer ataque a realizar: ");
 		        scanf("%s",ata);
-
+		        printf("Jugador 1, escriba la coordenada del segundo ataque a realizar: ");
+		        scanf("%s",que);
+		        /* Primer Ataque */
 		        if (existe(2,ata[0], ata[1])==1){
 		        	if (grid2->barcos == 1){
 		        		grid2->barcos -=1;
@@ -278,6 +281,26 @@ int main()
 		        }
 		        else{
 		        	grid1->mapa[letra(ata[0])][casteo(ata[1])] = 1;
+
+		        }
+		        /* Segundo Ataque */
+		        if (existe(2,que[0], que[1])==1){
+		        	if (grid2->barcos == 1){
+		        		grid2->barcos -=1;
+		        		*fin = 0;
+		        		break;
+		        	}
+		        	else{
+		        		grid2->barcos -=1;
+		        		grid1->mapa[letra(que[0])][casteo(que[1])] = 3;
+		        		char ruta[27];
+		        		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", que[0], que[1]);
+		        		remove(ruta);
+		        		crearhundido(2, que[0], que[1]);
+		        	}
+		        }
+		        else{
+		        	grid1->mapa[letra(que[0])][casteo(que[1])] = 1;
 
 		        }
 		    write(pipePaH[1],"1",1);
