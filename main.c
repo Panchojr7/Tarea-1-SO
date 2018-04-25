@@ -19,10 +19,10 @@
 
 /*Estructuras*/
 typedef struct grid{
-	char zona[5][5]; //ataques que me hacen
+	int zona[5][5]; //ataques que me hacen
 	int barcos; //barcos vivos mios
 	int naves; //barcos vivos enemigo
-	char mapa[5][5]; //ataque que yo hago 
+	int mapa[5][5]; //ataque que yo hago 
 } Grid;
 
 /* Funciones */
@@ -107,7 +107,7 @@ int main()
 	int pid, pipePaH[2], pipeHaP[2]; 
 	pipe(pipePaH); 
 	pipe(pipeHaP);
-	char msg[1];
+	char turno[1];
 
 	if((pid = fork() ) == 0){ 
     close(pipePaH[1]);
@@ -118,61 +118,91 @@ int main()
     close(pipeHaP[1]); 
     close(pipePaH[0]);
 	}
-
+	char coord[4];
 	/* Creacion de barcos de cada jugador */
 
 	/* Jugador 1 */
-	if(pid>0){
-		read(pipeHaP[0],msg,1);
-		instrucciones(1);
-		int i = 5;
-		while (i > 0){
-			char coord1[4];
-			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", &coord1);
-			if (existe(1, coord1[0], coord1[1]) == 0){
-				crearbarco(1, coord1[0], coord1[1]);
-				i = i - 1;
-			}
-			else{
-				printf("Error: En esa coordenada ya existe un barco.\n");
-			}
-		}
-		write(pipePaH[1],"1",1);
-	}
-
+	if(pid>0){ 
+	    read(pipeHaP[0],turno,1); 
+	    if(turno[0]=='0'){ 
+	        instrucciones(1);
+	        int i = 5;
+	        while (i > 0){
+	            printf("Ingrese la coordenada donde desea agregar un barco\n");
+	            scanf("%s", &coord);
+	            if (existe(1, coord[0], coord[1]) == 0){
+	                crearbarco(1, coord[0], coord[1]);
+	                i = i - 1;
+	            }
+	            else{
+	                printf("Error: En esa coordenada ya existe un barco.\n");
+	            }
+	        } 
+	        write(pipePaH[1],"1",1);
+	        read(pipeHaP[0],turno,1); 
+	    } 
+	} 
 
 	/* Jugador 2 */
-	else{
-		read(pipePaH[0],msg,1);
-		instrucciones(2);
-		int t = 5;
-		while (t > 0){
-			char coord2[4];
-			printf("Ingrese la coordenada donde desea agregar un barco\n");
-			scanf("%s", &coord2);
-			if (existe(2,coord2[0],coord2[1])==0){
-				crearbarco(2, coord2[0], coord2[1]);
-				t = t-1;
-			}
-			else{
-				printf("Error: En esa coordenada ya existe un barco.\n");
-			}
-		}
-		write(pipeHaP[1],"0",1);
+	else{ 
+	    read(pipePaH[0],turno,1);
+	    if(turno[0]== '1'){
+	        instrucciones(2);
+	        int t = 5;
+	        while (t > 0){
+	            printf("Ingrese la coordenada donde desea agregar un barco\n");
+	            scanf("%s", &coord);
+	            if (existe(2,coord[0],coord[1])==0){
+	                crearbarco(2, coord[0], coord[1]);
+	                t = t-1;
+	            }
+	            else{
+	                printf("Error: En esa coordenada ya existe un barco.\n");
+	            }
+	        }
+	        write(pipeHaP[1],"0",1);
+	    } 
 	}
 
-	
+	int fin=3;
 
+	if((pid = fork() ) == 0){ 
+    	close(pipePaH[1]);
+    	close(pipeHaP[0]);
+    	write(pipeHaP[1] ,"0", 1);
+	}
+	else{
+    	close(pipeHaP[1]); 
+    	close(pipePaH[0]);
+	}
 
+	/***********************************************************************************************************************************************/
+																/* Comienza el juego */
+	/**********************************************************************************************************************************************/
 
+	while(fin > 0){
 
+		/* Jugador 1 */
+		if(pid>0){ 
+		    read(pipeHaP[0],turno,1); 
+		    if(turno[0]=='0'){
+		    	grid1->zona[1][1]=7;
+		        printf("turno %d\n", grid1->zona[1][1]);
+		        scanf("%s",coord);
+		    write(pipePaH[1],"1",1); 
+		    } 
+		} 
 
-
-
-
-
-
+		/* Jugador 2 */
+		else{ 
+		    read(pipePaH[0],turno,1);
+		    if(turno[0]== '1'){
+		        printf("turno %c\n",turno[0]);
+		        write(pipeHaP[1],"0",1);
+		    } 
+		}
+	fin -= 1;
+	}
 
 	return 0;
 }
