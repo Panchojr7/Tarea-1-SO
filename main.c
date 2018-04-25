@@ -64,7 +64,7 @@ int letra(char a){
 
 void instrucciones(int j){
 	printf(RED	"Bienvenido Capitan %d\n", j);
-	printf(YELLOW	"Las coordenadas del juegp se componen de una Fila (letra mayuscula) seguida de una Columna (numero), ej B1\n");
+	printf(YELLOW	"Las coordenadas del juego se componen de una Fila (letra mayuscula) seguida de una Columna (numero), ej B1\n");
 	printf("Columnas: 1 - 2 - 3 - 4 - 5\n");
 	printf("Filas: A - B - C - D - E\n");
 	printf("TIP: No ingrese coordenadas fuera de rango o el programa presentara problemas de ejecucion.\n"	RESET);
@@ -261,8 +261,6 @@ int main()
 		    	panel(1,grid1->mapa);
 		        printf("Jugador 1, escriba la coordenada del primer ataque a realizar: ");
 		        scanf("%s",ata);
-		        printf("Jugador 1, escriba la coordenada del segundo ataque a realizar: ");
-		        scanf("%s",que);
 		        /* Primer Ataque */
 		        if (existe(2,ata[0], ata[1])==1){
 		        	if (grid2->barcos == 1){
@@ -277,12 +275,18 @@ int main()
 		        		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", ata[0], ata[1]);
 		        		remove(ruta);
 		        		crearhundido(2, ata[0], ata[1]);
+		        		printf(MAGENTA "[Jugador 1]   ");
+		        		printf(RED "¡¡HAS HUNDIDO UN BARCO!!!\n" RESET);
 		        	}
 		        }
 		        else{
 		        	grid1->mapa[letra(ata[0])][casteo(ata[1])] = 1;
+		        	printf(MAGENTA "[Jugador 1]   ");
+		        	printf(BLUE "¡¡HAS FALLADO!!!\n" RESET);
 
 		        }
+		        printf("Jugador 1, escriba la coordenada del segundo ataque a realizar: ");
+		        scanf("%s",que);
 		        /* Segundo Ataque */
 		        if (existe(2,que[0], que[1])==1){
 		        	if (grid2->barcos == 1){
@@ -297,10 +301,14 @@ int main()
 		        		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", que[0], que[1]);
 		        		remove(ruta);
 		        		crearhundido(2, que[0], que[1]);
+		        		printf(MAGENTA "[Jugador 1]   ");
+		        		printf(RED "¡¡HAS HUNDIDO UN BARCO!!!\n" RESET);
 		        	}
 		        }
 		        else{
 		        	grid1->mapa[letra(que[0])][casteo(que[1])] = 1;
+		        	printf(MAGENTA "[Jugador 1]   ");
+		        	printf(BLUE "¡¡HAS FALLADO!!!\n" RESET);
 
 		        }
 		    write(pipePaH[1],"1",1);
@@ -312,9 +320,9 @@ int main()
 		    read(pipePaH[0],turno,1);
 		    if(turno[0]== '1' && *fin > 0){
 		        panel(2,grid2->mapa);
-		        printf("Jugador 2, escriba la coordenada donde desea realizar su ataque:");
+		        printf("Jugador 2, escriba la coordenada del primer ataque a realizar: ");
 		        scanf("%s",ata);
-
+		        /* Primer Ataque*/
 		        if (existe(1,ata[0], ata[1])==1){
 		        	if (grid1->barcos == 1){
 		        		grid1->barcos -=1;
@@ -328,10 +336,40 @@ int main()
 		        		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", ata[0], ata[1]);
 		        		remove(ruta);
 		        		crearhundido(1, ata[0], ata[1]);
+		        		printf(MAGENTA "[Jugador 2]   ");
+		        		printf(RED "¡¡HAS HUNDIDO UN BARCO!!!\n" RESET);
 		        	}
 		        }
 		        else{
 		        	grid2->mapa[letra(ata[0])][casteo(ata[1])] = 1;
+		        	printf(MAGENTA "[Jugador 2]   ");
+		        	printf(BLUE "¡¡HAS FALLADO!!!\n" RESET);
+
+		        }
+		        printf("Jugador 2, escriba la coordenada del segundo ataque a realizar: ");
+		        scanf("%s",que);
+		        /* Segundo Ataque */
+		        if (existe(1,que[0], que[1])==1){
+		        	if (grid1->barcos == 1){
+		        		grid1->barcos -=1;
+		        		*fin = 0;
+		        		break;
+		        	}
+		        	else{
+		        		grid1->barcos -=1;
+		        		grid2->mapa[letra(que[0])][casteo(que[1])] = 3;
+		        		char ruta[27];
+		        		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", que[0], que[1]);
+		        		remove(ruta);
+		        		crearhundido(1, que[0], que[1]);
+		        		printf(MAGENTA "[Jugador 2]   ");
+		        		printf(RED "¡¡HAS HUNDIDO UN BARCO!!!\n" RESET);
+		        	}
+		        }
+		        else{
+		        	grid2->mapa[letra(que[0])][casteo(que[1])] = 1;
+		        	printf(MAGENTA "[Jugador 2]   ");
+		        	printf(BLUE "¡¡HAS FALLADO!!!\n" RESET);
 
 		        }
 		    write(pipeHaP[1],"0",1);
