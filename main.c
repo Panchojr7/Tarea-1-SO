@@ -19,10 +19,9 @@
 
 /*Estructuras*/
 typedef struct grid{
-	int zona[5][5]; //ataques que me hacen
+	int zona[5][5]; //ataques que me hacen -> Mis Barcos
 	int barcos; //barcos vivos mios
-	int naves; //barcos vivos enemigo
-	int mapa[5][5]; //ataque que yo hago 
+	int mapa[5][5]; //ataques que yo hago -> Mi panel
 } Grid;
 
 /* Funciones */
@@ -44,6 +43,24 @@ void tablero(){
 		}
 	}
 }	
+
+int letra(char a){
+	if(a=='A'){
+		return 0;
+	}
+	else if (a=='B'){
+		return 1;
+	}
+	else if (a=='C'){
+		return 2;
+	}
+	else if (a=='D'){
+		return 3;
+	}
+	else if (a=='E'){
+		return 4;
+	}
+}
 
 void instrucciones(int j){
 	printf(RED	"Bienvenido Capitan %d\n", j);
@@ -94,7 +111,46 @@ void crearbarco(int j, char coord1, char coord2){
 	}
 }
 
+void crearhundido(int j, char coord1, char coord2){
+	if (j == 1){
+		char ruta1[29];
+		snprintf(ruta1, sizeof(ruta1), "./J1/%c%c/hundido.txt", coord1, coord2);
+		FILE *fp;
+		fp=fopen(ruta1,"w");
+		fclose(fp);
+	}
+	else if (j == 2){
+		char ruta2[29];
+		snprintf(ruta2, sizeof(ruta2), "./J2/%c%c/hundido.txt", coord1, coord2);
+		FILE *fp;
+		fp=fopen(ruta2,"w");
+		fclose(fp);
+	}
+}
 
+void panel(int w, int arr[5][5]){
+	int i,j;
+	if (w==1){
+		printf(GREEN	"|				Panel de Combate				|\n");
+		for (i = 0; i < 5; ++i){
+			printf("|	%d	|	%d	|	%d	|	%d	|	%d	|\n", arr[i][0], arr[i][1], arr[i][2], arr[i][3], arr[i][4]);
+				
+		}
+		printf("\n"	RESET);
+	}
+	else if (w==2){
+		printf(CYAN	"|				Panel de Combate				|\n");
+		for (i = 0; i < 5; ++i){
+			printf("|	%d	|	%d	|	%d	|	%d	|	%d	|\n", arr[i][0], arr[i][1], arr[i][2], arr[i][3], arr[i][4]);
+		}
+		printf("\n" RESET);
+	}
+}
+
+int casteo(char c){
+	int i= (int)c - '0';
+	return i-1;
+}
 
 int main()
 {
@@ -103,6 +159,17 @@ int main()
 	/*Inicializamos los grid de cada jugador con memoria dinamica*/
 	Grid * grid1 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	Grid * grid2 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	int i,j;
+	for (i = 0; i < 5; ++i){
+		for (j = 0; j < 5; ++j){
+			grid1->mapa[i][j]= 0;
+			grid2->mapa[i][j]= 0;
+			grid1->zona[i][j]= 0;
+			grid2->zona[i][j]= 0;
+		}	
+	}
+	grid1->barcos=5;
+	grid2->barcos=5;
 
 	int pid, pipePaH[2], pipeHaP[2]; 
 	pipe(pipePaH); 
@@ -132,6 +199,7 @@ int main()
 	            scanf("%s", &coord);
 	            if (existe(1, coord[0], coord[1]) == 0){
 	                crearbarco(1, coord[0], coord[1]);
+	                grid1->zona[letra(coord[0])][coord[1]]=1;
 	                i = i - 1;
 	            }
 	            else{
@@ -154,6 +222,7 @@ int main()
 	            scanf("%s", &coord);
 	            if (existe(2,coord[0],coord[1])==0){
 	                crearbarco(2, coord[0], coord[1]);
+	                grid2->zona[letra(coord[0])][coord[1]]=1;
 	                t = t-1;
 	            }
 	            else{
@@ -163,8 +232,6 @@ int main()
 	        write(pipeHaP[1],"0",1);
 	    } 
 	}
-
-	int fin=3;
 
 	if((pid = fork() ) == 0){ 
     	close(pipePaH[1]);
@@ -180,16 +247,39 @@ int main()
 																/* Comienza el juego */
 	/**********************************************************************************************************************************************/
 
+	int fin = mmap(NULL, 1, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	fin=1;
+	char ata[2];
 	while(fin > 0){
 
 		/* Jugador 1 */
 		if(pid>0){ 
 		    read(pipeHaP[0],turno,1); 
 		    if(turno[0]=='0'){
-		    	grid1->zona[1][1]=7;
-		        printf("turno %d\n", grid1->zona[1][1]);
-		        scanf("%s",coord);
-		    write(pipePaH[1],"1",1); 
+		    	panel(1,grid1->mapa);
+		        printf("Jugador 1, escriba la coordenada donde desea realizar su ataque:");
+		        scanf("%s",ata);
+
+		        if (existe(2,ata[0], ata[1])==1){
+		        	if (grid2->barcos == 1){
+		        		grid2->barcos -=1;
+		        		fin = 0;
+		        		break;
+		        	}
+		        	else{
+		        		grid2->barcos -=1;
+		        		grid1->mapa[letra(ata[0])][casteo(ata[1])] = 3;
+		        		char ruta[27];
+		        		snprintf(ruta, sizeof(ruta), "./J2/%c%c/barco.txt", ata[0], ata[1]);
+		        		remove(ruta);
+		        		crearhundido(2, ata[0], ata[1]);
+		        	}
+		        }
+		        else{
+		        	grid1->mapa[letra(ata[0])][casteo(ata[1])] = 1;
+
+		        }
+		    write(pipePaH[1],"1",1);
 		    } 
 		} 
 
@@ -197,11 +287,41 @@ int main()
 		else{ 
 		    read(pipePaH[0],turno,1);
 		    if(turno[0]== '1'){
-		        printf("turno %c\n",turno[0]);
-		        write(pipeHaP[1],"0",1);
-		    } 
+		        panel(2,grid2->mapa);
+		        printf("Jugador 2, escriba la coordenada donde desea realizar su ataque:");
+		        scanf("%s",ata);
+
+		        if (existe(1,ata[0], ata[1])==1){
+		        	if (grid1->barcos == 1){
+		        		grid1->barcos -=1;
+		        		fin = 1;
+		        		break;
+		        	}
+		        	else{
+		        		grid1->barcos -=1;
+		        		grid2->mapa[letra(ata[0])][casteo(ata[1])] = 3;
+		        		char ruta[27];
+		        		snprintf(ruta, sizeof(ruta), "./J1/%c%c/barco.txt", ata[0], ata[1]);
+		        		remove(ruta);
+		        		crearhundido(1, ata[0], ata[1]);
+		        	}
+		        }
+		        else{
+		        	grid2->mapa[letra(ata[0])][casteo(ata[1])] = 1;
+
+		        }
+		    write(pipeHaP[1],"0",1);
+		    }
 		}
-	fin -= 1;
+	}
+
+	if(grid2->barcos == 0){
+		printf("EL GANADOR ES EL JUGADOR 1\n");
+		return 0;
+	}
+	else if(grid1->barcos == 0){
+		printf("EL GANADOR ES EL JUGADOR 2\n");
+		return 0;
 	}
 
 	return 0;
