@@ -159,9 +159,12 @@ int main()
 	/*Inicializamos los grid de cada jugador con memoria dinamica*/
 	Grid * grid1 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
 	Grid * grid2 = (Grid *)mmap(NULL, sizeof(Grid), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	int * fin = mmap(NULL, sizeof(int), PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
+	*fin=1;
+
 	int i,j;
-	for (i = 0; i < 5; ++i){
-		for (j = 0; j < 5; ++j){
+	for (i = 0; i < 5; i++){
+		for (j = 0; j < 5; j++){
 			grid1->mapa[i][j]= 0;
 			grid2->mapa[i][j]= 0;
 			grid1->zona[i][j]= 0;
@@ -247,15 +250,13 @@ int main()
 																/* Comienza el juego */
 	/**********************************************************************************************************************************************/
 
-	int fin = mmap(NULL, 1, PROT_READ|PROT_WRITE, MAP_SHARED|MAP_ANONYMOUS, -1, 0);
-	fin=1;
 	char ata[2];
-	while(fin > 0){
+	while(*fin > 0){
 
 		/* Jugador 1 */
 		if(pid>0){ 
-		    read(pipeHaP[0],turno,1); 
-		    if(turno[0]=='0'){
+		    read(pipeHaP[0],turno,1);
+		    if(turno[0]=='0' && *fin > 0){
 		    	panel(1,grid1->mapa);
 		        printf("Jugador 1, escriba la coordenada donde desea realizar su ataque:");
 		        scanf("%s",ata);
@@ -263,7 +264,7 @@ int main()
 		        if (existe(2,ata[0], ata[1])==1){
 		        	if (grid2->barcos == 1){
 		        		grid2->barcos -=1;
-		        		fin = 0;
+		        		*fin = 0;
 		        		break;
 		        	}
 		        	else{
@@ -286,7 +287,7 @@ int main()
 		/* Jugador 2 */
 		else{ 
 		    read(pipePaH[0],turno,1);
-		    if(turno[0]== '1'){
+		    if(turno[0]== '1' && *fin > 0){
 		        panel(2,grid2->mapa);
 		        printf("Jugador 2, escriba la coordenada donde desea realizar su ataque:");
 		        scanf("%s",ata);
@@ -294,7 +295,7 @@ int main()
 		        if (existe(1,ata[0], ata[1])==1){
 		        	if (grid1->barcos == 1){
 		        		grid1->barcos -=1;
-		        		fin = 1;
+		        		*fin = 0;
 		        		break;
 		        	}
 		        	else{
