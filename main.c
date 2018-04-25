@@ -138,7 +138,7 @@ void crearbarco(int j, char coord1, char coord2){
 }
 
 void panel(int w, int arr[5][5]){
-	int i,j;
+	int i;
 	if (w==1){
 		printf(GREEN	"|					Panel de Combate Jugador 1				|\n");
 		printf("|	N°	|	A	|	B	|	C	|	D	|	E	|\n");
