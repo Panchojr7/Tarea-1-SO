@@ -16,7 +16,7 @@ make
 ## Para ejecutar:  
 usar ./exe para ambos casos.
 
-**Detalles:** 
+# **Detalles:** 
 
 ### Antes de ejecutar:
 Borrar las carpetas J1 y J2 del directorio en caso de existir. 
