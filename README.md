@@ -7,7 +7,6 @@ Tarea N° 1 SO
 * 201573546-8
 
 
-**Nota:** El ejercicio 1 de las funciones no está terminado.
 
 ## Metodo de compilacion  
 
