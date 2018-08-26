@@ -11,7 +11,9 @@ Tarea N° 1 SO
 ## Metodo de compilacion  
 
 ### Comando:  
+```
 make 
+```
 
 ## Para ejecutar:  
 usar ./exe para ambos casos.
