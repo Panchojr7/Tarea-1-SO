@@ -1,4 +1,4 @@
-# Tarea-1-SO
+# Tarea-1-SO  "Combate Naval de Directorios"
 Tarea N° 1 SO 
   
 ## *Nota: 100*  
